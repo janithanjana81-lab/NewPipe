@@ -1,0 +1,40 @@
+name: Modern CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-assurance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip' # Speeds up future runs
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Linter (Flake8)
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Unit Tests
+        run: pytest
+
+  deploy:
+    needs: quality-assurance # Only runs if tests pass
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production
+        run: echo "Deploying to cloud provider..."
+        # Replace the above with your provider-specific action (AWS, Azure, Vercel, etc.)
